@@ -5,6 +5,7 @@ import java.util.Scanner;
 public class QuickChat {
 
     public static void main(String[] args) {
+        Message.loadStoredMessages();
 
         Scanner input = new Scanner(System.in);
         int messagesSent = 0;
@@ -43,6 +44,7 @@ public class QuickChat {
             System.out.println("\n1) Send Messages");
             System.out.println("2) Show recently sent messages");
             System.out.println("3) Quit");
+            System.out.println("4) Stored Messages");
 
             System.out.print("Choose an option: ");
             int choice = input.nextInt();
@@ -105,9 +107,15 @@ System.out.println("3) Store Message");
 
                         if (messageChoice == 1) {
                             System.out.println(msg.sendMessage(1));
+                            
+                            Message.sentMessages.add(msg.printMessage());
+                            
                             messagesSent++;
                         } else if (messageChoice == 2) {
     System.out.println(msg.sendMessage(2));
+    
+    Message.disregardedMessages.add(msg.printMessage());
+    
 } else if (messageChoice == 3) {
 
     if (msg.storeMessage()) {
@@ -129,16 +137,171 @@ System.out.println("3) Store Message");
                     break;
 
                 case 3:
-                    System.out.println(
-                            "Thank you for using QuickChat.");
+                    System.out.println("Thank you for using QuickChat.");
                     running = false;
                     break;
+                
+                case 4:
+    System.out.println("\nStored Messages Menu");
+    System.out.println("1) Display all stored messages");
+    System.out.println("2) Display longest stored message");
+    System.out.println("3) Search message by ID");
+    System.out.println("4) Search messages by recipient");
+    System.out.println("5) Delete message by hash");
+    System.out.println("6) Display full message report");
+    System.out.println("7) Back to main menu");
+
+    System.out.print("Choose an option: ");
+    int storedChoice = input.nextInt();
+    input.nextLine();
+
+    switch (storedChoice) {
+        case 1:
+    if (Message.storedMessages.isEmpty()) {
+        System.out.println("No stored messages available.");
+    } else {
+        System.out.println("\nAll Stored Messages:");
+
+        for (String storedMessage : Message.storedMessages) {
+            System.out.println(storedMessage);
+            System.out.println("-------------------------");
+        }
+    }
+    break;
+        case 2:
+    if (Message.storedMessages.isEmpty()) {
+        System.out.println("No stored messages available.");
+    } else {
+        String longestMessage = Message.storedMessages.get(0);
+
+        for (String storedMessage : Message.storedMessages) {
+            if (storedMessage.length() > longestMessage.length()) {
+                longestMessage = storedMessage;
+            }
+        }
+
+        System.out.println("\nLongest Stored Message:");
+        System.out.println(longestMessage);
+        System.out.println("Characters: " + longestMessage.length());
+    }
+    break;
+        case 3:
+    System.out.print("Enter message ID to search: ");
+    String searchID = input.nextLine();
+
+    boolean found = false;
+
+    for (int i = 0; i < Message.storedMessageIDs.size(); i++) {
+        if (Message.storedMessageIDs.get(i).equals(searchID)) {
+            System.out.println("Message found:");
+            System.out.println(Message.storedMessages.get(i));
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        System.out.println("Message ID not found.");
+    }
+    break;
+        case 4:
+    System.out.print("Enter recipient number to search: ");
+    String searchRecipient = input.nextLine();
+    boolean recipientFound = false;
+
+    for (String storedMessage : Message.storedMessages) {
+        if (storedMessage.contains(searchRecipient)) {
+            System.out.println("Message found:");
+            System.out.println(storedMessage);
+            System.out.println("-------------------------");
+            recipientFound = true;
+        }
+    }
+
+    if (!recipientFound) {
+        System.out.println("No messages found for that recipient.");
+    }
+    break;        
+        case 5:
+    System.out.print("Enter message hash to delete: ");
+    String deleteHash = input.nextLine();
+    boolean deleted = false;
+
+    for (int i = 0; i < Message.storedMessageIDs.size(); i++) {
+        String storedID = Message.storedMessageIDs.get(i);
+        String matchingHash = "";
+
+        for (int j = 0; j < Message.messageIDs.size(); j++) {
+            if (Message.messageIDs.get(j).equals(storedID)) {
+                matchingHash = Message.messageHashes.get(j);
+                break;
+            }
+        }
+
+        if (matchingHash.equals(deleteHash)) {
+            if (Message.removeFromJsonFile(storedID)) {
+                Message.storedMessages.remove(i);
+                Message.storedMessageIDs.remove(i);
+
+                for (int j = 0; j < Message.messageIDs.size(); j++) {
+                    if (Message.messageIDs.get(j).equals(storedID)) {
+                        Message.messageIDs.remove(j);
+                        Message.messageHashes.remove(j);
+                        break;
+                    }
+                }
+
+                System.out.println("Message deleted successfully.");
+                deleted = true;
+            } else {
+                System.out.println("Message could not be deleted from file.");
+            }
+            break;
+        }
+    }
+
+    if (!deleted) {
+        System.out.println("Message hash not found.");
+    }
+    break;
+        case 6:
+    if (Message.storedMessages.isEmpty()) {
+        System.out.println("No stored messages available.");
+    } else {
+        System.out.println("\nFULL MESSAGE REPORT");
+        System.out.println("========================");
+
+        for (int i = 0; i < Message.storedMessages.size(); i++) {
+            String storedID = Message.storedMessageIDs.get(i);
+
+            System.out.println("Message ID: " + storedID);
+
+            for (int j = 0; j < Message.messageIDs.size(); j++) {
+                if (Message.messageIDs.get(j).equals(storedID)) {
+                    System.out.println("Message Hash: "
+                            + Message.messageHashes.get(j));
+                    break;
+                }
+            }
+
+            System.out.println(Message.storedMessages.get(i));
+            System.out.println("-------------------------");
+        }
+    }
+    break;
+        case 7:
+            break;
+        default:
+            System.out.println("Invalid option.");
+    }
+    break;
 
                 default:
                     System.out.println("Invalid option.");
                     break;
-            }
-
+                    
+            }        
+                    
             }
         } else {
             System.out.println("Login failed.");
